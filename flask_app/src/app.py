@@ -1,6 +1,7 @@
 import os
 from flask import Flask, render_template, jsonify, request
 from flask_pymongo import PyMongo
+from datetime import datetime
 
 from dotenv import load_dotenv
 
@@ -64,6 +65,54 @@ def agregar_dato_prueba():
             return jsonify({"error": f"Error al insertar en la base de datos: {e}"}), 500
     else:
         return jsonify({"error": "La conexión a la base de datos no está establecida."}), 500
+    
+
+@app.route('/receive_sensor_data', methods=['POST'])
+def receive_sensor_data():
+    """
+    Ruta diseñada para recibir datos de un dispositivo (ESP32) mediante POST.
+    Espera un JSON con 'sensor_type' y 'value'.
+    """
+    if sensor1_collection is None:
+        # En caso de que la conexión a la DB haya fallado al inicio
+        return jsonify({"error": "La conexión a la base de datos no está establecida."}), 503
+
+    try:
+        # 1. Obtener los datos JSON
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({"error": "No se proporcionó un payload JSON"}), 400
+
+        # 2. Validación y extracción de campos obligatorios
+        sensor_type = data.get('sensor_type')
+        value = data.get('value')
+        unit = data.get('unit', 'N/A') # El campo 'unit' es opcional
+
+        if sensor_type is None or value is None:
+            return jsonify({"error": "Faltan campos obligatorios: 'sensor_type' o 'value'"}), 400
+
+        # 3. Construir el documento para MongoDB
+        doc_to_insert = {
+            "sensor": sensor_type,
+            "valor": value,
+            "unidad": unit,
+            "timestamp": datetime.now() # Agregar la marca de tiempo del servidor
+        }
+
+        # 4. Insertar en MongoDB
+        result = sensor1_collection.insert_one(doc_to_insert)
+
+        # 5. Respuesta de éxito (código 201: Creado)
+        return jsonify({
+            "status": "success",
+            "message": "Dato de sensor recibido y guardado exitosamente.",
+            "id_mongo": str(result.inserted_id),
+            "data_received": doc_to_insert
+        }), 201
+    except Exception as e:
+        print(f"Error al procesar los datos del sensor: {e}")
+        return jsonify({"status": "error", "message": f"Error interno del servidor: {e}"}), 500
     
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
