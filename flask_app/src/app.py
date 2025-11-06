@@ -69,12 +69,8 @@ def agregar_dato_prueba():
 
 @app.route('/receive_sensor_data', methods=['POST'])
 def receive_sensor_data():
-    """
-    Ruta diseñada para recibir datos de un dispositivo (ESP32) mediante POST.
-    Espera un JSON con 'sensor_type' y 'value'.
-    """
     if sensor1_collection is None:
-        # En caso de que la conexión a la DB haya fallado al inicio
+        
         return jsonify({"error": "La conexión a la base de datos no está establecida."}), 503
 
     try:
