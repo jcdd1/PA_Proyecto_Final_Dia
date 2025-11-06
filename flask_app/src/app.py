@@ -74,32 +74,32 @@ def receive_sensor_data():
         return jsonify({"error": "La conexión a la base de datos no está establecida."}), 503
 
     try:
-        # 1. Obtener los datos JSON
+        # Obtener los datos JSON
         data = request.get_json()
         
         if not data:
             return jsonify({"error": "No se proporcionó un payload JSON"}), 400
 
-        # 2. Validación y extracción de campos obligatorios
+        
         sensor_type = data.get('sensor_type')
         value = data.get('value')
-        unit = data.get('unit', 'N/A') # El campo 'unit' es opcional
+        unit = data.get('unit', 'N/A') 
 
         if sensor_type is None or value is None:
             return jsonify({"error": "Faltan campos obligatorios: 'sensor_type' o 'value'"}), 400
 
-        # 3. Construir el documento para MongoDB
+        
         doc_to_insert = {
             "sensor": sensor_type,
             "valor": value,
             "unidad": unit,
-            "timestamp": datetime.now() # Agregar la marca de tiempo del servidor
+            "timestamp": datetime.now() 
         }
 
-        # 4. Insertar en MongoDB
+        
         result = sensor1_collection.insert_one(doc_to_insert)
 
-        # 5. Respuesta de éxito (código 201: Creado)
+
         return jsonify({
             "status": "success",
             "message": "Dato de sensor recibido y guardado exitosamente.",
