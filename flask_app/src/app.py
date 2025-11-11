@@ -110,5 +110,9 @@ def receive_sensor_data():
         print(f"Error al procesar los datos del sensor: {e}")
         return jsonify({"status": "error", "message": f"Error interno del servidor: {e}"}), 500
     
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
