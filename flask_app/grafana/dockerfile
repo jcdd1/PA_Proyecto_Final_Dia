@@ -1,0 +1,10 @@
+FROM grafana/grafana-oss:latest
+
+# Install a specific plugin (example)
+RUN grafana-cli plugins install grafana-piechart-panel
+
+# Copy custom configuration files (example)
+COPY ./custom.ini /etc/grafana/grafana.ini
+
+# Expose the Grafana port (already done in base image, but good practice)
+EXPOSE 3000
