@@ -126,50 +126,31 @@ def root_path():
 # 2. RUTA DE BÚSQUEDA (Search)
 @app.route('/search', methods=['POST'])
 def search():
-    """
-    El plugin llama a esta ruta para obtener una lista de métricas disponibles.
-    Devolvemos una lista de strings con las series que podemos ofrecer.
-    """
-    # Como solo ofrecemos una serie de la colección sensor1, la nombramos:
+
     return jsonify(["sensor1_temperatures"]), 200
 
-# 3. RUTA DE CONSULTA (Query)
+
 @app.route('/query', methods=['POST'])
 def query():
-    """
-    Ruta principal de consulta. Grafana envía el rango de tiempo y las métricas solicitadas.
-    """
-    # En este punto, Grafana POSTea el JSON con el rango de tiempo (range) 
-    # y las métricas seleccionadas (targets).
     
-    # 1. Obtenemos los datos de MongoDB
+
     if sensor1_collection is None:
         return jsonify({"error": "La conexión a la base de datos no está establecida."}), 503
 
     try:
-        # Aquí puedes usar request.get_json() para obtener el rango de tiempo de Grafana
-        # y filtrar la consulta, pero por simplicidad, obtenemos los últimos 1000.
+
         data_cursor = sensor1_collection.find().sort("timestamp", -1).limit(1000)
         
-        # 2. Formateamos los datos para que Grafana los entienda.
-        # El plugin JSON API Datasource espera un array de objetos JSON para las series de tiempo.
-        # ESTRUCTURA DE RESPUESTA ESPERADA: 
-        # [
-        #   { "target": "sensor1_temperatures", "datapoints": [[value, timestamp_ms], ...] }
-        # ]
-        
-        # Esto requiere una estructura de datos diferente a la ruta /api/data.
-        # Aquí convertimos los datos al formato de 'datapoints' (array de arrays).
         datapoints = []
         for document in data_cursor:
             # Convertimos el objeto datetime a timestamp UNIX en milisegundos (ms)
             timestamp_ms = int(document["timestamp"].timestamp() * 1000)
             datapoints.append([document["valor"], timestamp_ms])
             
-        # 3. Creamos la respuesta final
+
         response = [
             {
-                # El target debe coincidir con el devuelto en la ruta /search
+                
                 "target": "sensor1_temperatures", 
                 "datapoints": datapoints
             }
